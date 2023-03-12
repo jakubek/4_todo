@@ -1,6 +1,6 @@
 replicaCount: 2
 
-vault_url: https://kv5c6c.vault.azure.net/
+vault_url: https://kv0177.vault.azure.net/
 
 image:
   repository: mypreciousacr.azurecr.io/todo
