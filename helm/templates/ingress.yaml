@@ -1,0 +1,18 @@
+{{- $fullName := include "todo.fullname" . -}}
+
+{{- if .Values.ingress.enabled -}}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ $fullName }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: HostRegexp(`{catchall:.+}`)
+      kind: Rule
+      priority: 10
+      services:
+        - name: {{ $fullName }}
+          port: 80
+{{- end }}

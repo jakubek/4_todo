@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo.fullname" . }}
+  labels:
+    {{- include "todo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ include "todo.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: [ "/bin/sh" ]
+        args: [ "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+        env:
+        - name: DB_HOST
+          value: "{{ .Values.db.host }}"
+        - name: DB_USER
+          value: "{{ .Values.db.user }}"
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: esecrets
+              key: db_password
+        - name: DB_PORT
+          value: "{{ .Values.db.port }}"
+        - name: DB_NAME
+          value: "{{ .Values.db.name }}"
+        ports:
+        - containerPort: 8000

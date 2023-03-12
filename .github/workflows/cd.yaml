@@ -1,0 +1,70 @@
+name: CD flow
+
+on:
+  push:
+    branches:
+      - init
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: todo
+
+jobs:
+  build-and-push-docker-image:
+    name: Build Docker image and push to ACR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Build and push image'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE }}:${{ github.sha }}
+
+  deploy:
+    if: ${{ false }}
+    name: Deploy changes to production directory
+    needs: build-and-push-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code 4_todo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          path: '4_todo'
+
+      - name: Checkout code 4_production
+        uses: actions/checkout@v3
+        with:
+          repository: 'jakubek/4_production'
+          path: '4_production'
+          ssh-key: ${{ secrets.SSH_KEY_4_PRODUCTION }}
+
+      - name: update 4_production
+        run : |
+          mkdir -p 4_production/todo
+          cp -a 4_todo/helm/* 4_production/todo/
+          cd 4_production/todo/
+          sed -i "s/TAG/${{ github.sha }}/g" values.yaml
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions Pusher"
+          git checkout main
+          git add .
+          git commit -am "Update version"
+          git push

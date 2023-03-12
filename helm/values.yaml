@@ -1,0 +1,28 @@
+replicaCount: 2
+
+vault_url: https://kv5c6c.vault.azure.net/
+
+image:
+  repository: mypreciousacr.azurecr.io/todo
+  pullPolicy: IfNotPresent
+  tag: TAG
+
+db:
+  user: master
+  host: rg1mysql.mysql.database.azure.com
+  name: todo
+  port: 3306
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
