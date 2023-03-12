@@ -3,7 +3,7 @@ name: CD flow
 on:
   push:
     branches:
-      - init
+      - init_v1
 
 concurrency:
   group: ${{ github.ref }}
