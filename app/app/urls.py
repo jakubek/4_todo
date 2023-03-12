@@ -20,4 +20,5 @@ from django.conf.urls import include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/todos', include('todos.urls')),
+    path('xdos', include('todos.urls')),
 ]
